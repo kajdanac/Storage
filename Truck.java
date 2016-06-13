@@ -11,8 +11,8 @@ public class Truck extends Entity
 	private Long angVel;
 	private Program programe;
 	private ParkingSpot pa;
-	private Boolean arrive;
 	private Boolean depart;
+	private volatile Integer state;
 	public Truck(Program prog,Position pos, BoundingBox box, Velocity vel, Boolean full, Long time)
 	{
 		programe = prog;
@@ -23,8 +23,8 @@ public class Truck extends Entity
 		setT(time);
 		angle = new Long(180);
 		angVel = new Long(0);
-		arrive = true;
 		depart = false;
+		state = 0;
 	}
 	
 	@Override
@@ -49,73 +49,109 @@ public class Truck extends Entity
 			}
 			
 		}
-		
-		if(!depart)
+		switch(state)
 		{
-			if(p.x < 480)
+		case 0:
+			if(p.x < 390)
 			{
-				if(arrive)
-				{
+				p.x = 390d;
+				if(pa == null)
 					pa = programe.pl.getFreeSpot();
-					if(pa == null)
+				if(pa != null)
+				{
+					pa.t = this;
+					state = 1;
+					if(pa.getB().p.y > p.y)
 					{
-						v.x = 0.0;
-						p.x = 480;
+						v.set(0d, 20d);
+						angle = (long)90;
 					}
 					else
 					{
-						arrive = false;
-						pa.t = this;
-						if(pa.getB().p.y-p.y > 0)
-						{
-							v.y = 20d;
-						}
-						else
-						{
-							v.y = -20d;
-						}
+						v.set(0d, -20d);
+						angle = (long)270;
 					}
 				}
 			}
+			break;
+		case 1:
 			if(v.y > 0)
 			{
-				if(pa.getB().p.y-p.y <= 0)
+				if(pa.getB().p.y <= p.y)
 				{
 					p.y = pa.getB().p.y;
-					v.y = 0d;
+					v.set(-10d, 0d);
+					angle = (long)0;
+					state = 2;
 				}
 			}
-			else if(v.y < 0)
+			else
 			{
-				if(p.y-pa.getB().p.y <= 0)
+				if(pa.getB().p.y >= p.y)
 				{
 					p.y = pa.getB().p.y;
-					v.y = 0d;
+					v.set(-10d, 0d);
+					angle = (long)0;
+					state = 2;
 				}
 			}
-			if(pa != null && p.x <= pa.getB().p.x)
+			break;
+		case 2:
+			if(pa.getB().p.x >= p.x)
 			{
-				v.x = 0d;
+				p.x = pa.getB().p.x;
 				pa.callForklift();
+				v.set(0d, 0d);
+				state = 6;
 			}
-		}
-		else
-		{
+			break;
+		case 3:
+			if(p.x > 295)
+			{
+				p.x = 295d;
+				state = new Integer(4);
+				if(296 > p.y)
+				{
+					v.set(0d, 20d);
+					angle = (long)90;
+				}
+				else
+				{
+					v.set(0d, -20d);
+					angle = (long)270;
+				}
+			}
+			break;
+		case 4:
 			if(v.y > 0)
 			{
-				if(p.y > 296)
+				if(296 <= p.y)
 				{
+					p.y = 296;
 					v.set(20d, 0d);
+					angle = (long)0;
+					state = 5;
 				}
 			}
-			else if(v.y < 0)
+			else
 			{
-				if(p.y < 296)
+				if(296 >= p.y)
 				{
+					p.y = 296;
 					v.set(20d, 0d);
+					angle = (long)0;
+					state = 5;
 				}
 			}
+			break;
+		case 5:
+			programe.pl.signalDrive();
+			state = 6;
+			break;
+		default:
+			break;
 		}
+		
 	}
 	public synchronized Boolean getFull()
 	{
@@ -178,5 +214,15 @@ public class Truck extends Entity
 	public synchronized void setDepart(Boolean depart)
 	{
 		this.depart = depart;
+	}
+
+	public synchronized Integer getState()
+	{
+		return state;
+	}
+
+	public synchronized void setState(Integer state)
+	{
+		this.state = state;
 	}
 }

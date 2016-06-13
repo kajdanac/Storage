@@ -6,39 +6,35 @@ public class ParkingSpot {
 	public Forklift f;
 	public Truck t;
 	public boolean empty = true;
+	private Parking par;
 	
-	public ParkingSpot(Position p, BoundingBox b, Forklift f) 
+	public ParkingSpot(Position p, BoundingBox b, Forklift f, Parking par) 
 	{
 		super();
 		this.p = p;
 		this.setB(b);
 		this.f = f;
 		f.par = this;
+		this.par = par;
 	}
 	
 	
 	public Position callForklift()
 	{
 		f.v.x = 10d;
+		par.signalDrive();
 		return this.p;
 	}
 	
 	public boolean endDrop()
 	{
 		Velocity tvel;
-		t.setAngle(new Long(0));
+		par.waitDrive();
 		t.setDepart(true);
+		t.setState(3);
 		empty = true;
-		if(t.getP().y > 312)
-		{
-			tvel = new Velocity(20d, -20d);
-			t.setV(tvel);
-		}
-		else if(t.getP().y < 312)
-		{
-			tvel = new Velocity(20d, 20d);
-			t.setV(tvel);
-		}
+		tvel = new Velocity(20d, 0d);
+		t.setV(tvel);
 		return true;
 	}
 

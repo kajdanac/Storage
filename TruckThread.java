@@ -1,7 +1,5 @@
 import java.util.Date;
-import java.util.Random;
-
-import javax.swing.SwingWorker;
+//import java.util.Random;
 
 public class TruckThread implements Runnable
 {
@@ -9,8 +7,7 @@ public class TruckThread implements Runnable
 	Double dt;
 	public TruckThread()
 	{
-		Random r = new Random(System.currentTimeMillis());
-		Position p = new Position(734d, 244d);
+		//Random r = new Random(System.currentTimeMillis());
 		dt = 0d;
 	}
 	public TruckThread(Truck t)
@@ -25,12 +22,20 @@ public class TruckThread implements Runnable
 		{
 			Date d1 = new Date();
 			t.update(dt);
+			try
+			{
+				Thread.sleep(100);
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
 			Date d2 = new Date();
 			dt = ((d2.getTime()-d1.getTime())/1000d);
 			d1 = d2 = null;
 			
 		}
 	}*/
+	
 	@Override
 	public void run()
 	{

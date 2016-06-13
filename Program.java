@@ -29,13 +29,13 @@ public class Program
 		ForkliftThread tt;
 		Thread nt;
 		k = new Position(96d, 72d);
-		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(0000)));
+		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(10000)));
 		k = new Position(96d, 205d);
-		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(0000)));
+		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(10000)));
 		k = new Position(96d, 329d);
-		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(0000)));
+		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(10000)));
 		k = new Position(96d, 461d);
-		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(0000)));
+		fl.add(new Forklift(k, new BoundingBox(k, 64d, 32d), new Velocity(0d,  0d), new Long(10000)));
 		pl = new Parking(this);
 		for(Forklift tmp : fl)
 		{
@@ -59,36 +59,24 @@ public class Program
 					w.setVisible(true);
 				}
 			});
-		} catch (InvocationTargetException e)
+		} catch (InvocationTargetException e1)
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e)
+			e1.printStackTrace();
+		} catch (InterruptedException e1)
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
 		Loop();
 	}
 	private void Loop()
 	{
 		while(true)
-		{
+		{	
 			if(u)
-				update();
-			render();
-		}
-	}
-	private void update()
-	{
-		Random r = new Random(System.currentTimeMillis());
-		u = false;
-		t.schedule(new TimerTask()
-		{
-			@Override
-			public void run()
 			{
-				u = true;
+				update();
 				Truck tmp = null;
 				tmp = tf.nextTruck();
 				if(tmp != null)
@@ -97,9 +85,25 @@ public class Program
 					tl.add(tmp);
 					s.release();
 					TruckThread tt = new TruckThread(tl.getLast());
-					Thread nt = new Thread(tt);
-					nt.start();
+					Thread tn = new Thread(tt);
+					tn.setDaemon(true);
+					tn.start();
 				}
+			}
+			render();
+		}
+	}
+	
+	private void update()
+	{
+		u = false;
+		Random r = new Random(System.currentTimeMillis());
+		t.schedule(new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				u = true;
 			}
 		}, new Long(8000+r.nextInt(10000)));
 	}
@@ -107,5 +111,4 @@ public class Program
 	{
 		w.render();
 	}
-	
 }
