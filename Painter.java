@@ -42,8 +42,8 @@ public class Painter extends JComponent
 		for(Truck tmp : p.tl)
 		{
 			tr = new AffineTransform(b.getTransform());
-			b.translate((int)tmp.getP().x+45, (int)tmp.getP().y+16);
-			b.rotate(Math.toRadians(tmp.getAngle()));
+			b.translate((int)tmp.p.x+45, (int)tmp.p.y+16);
+			b.rotate(Math.toRadians(tmp.angle));
 			b.drawImage(truck, -45, -16,
 					45, 16,
 					0, 0, 90, 32, null);

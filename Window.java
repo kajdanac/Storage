@@ -14,7 +14,7 @@ public class Window extends JFrame
 	{
 		p = new Painter(b);
 		p.setSize(new Dimension(800, 600));
-		this.setSize(new Dimension(809, 629));
+		this.setSize(new Dimension(806, 629));
 		this.setResizable(false);
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.getContentPane().add(p);

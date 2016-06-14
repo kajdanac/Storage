@@ -41,18 +41,18 @@ public class TruckFactory
 	{
 		Position t = new Position(p);
 		Random r = new Random(System.currentTimeMillis());
-		if(r.nextBoolean() && full < 4)
+		if(/*r.nextBoolean() &&*/ full < 8)
 		{
-			tmp = new Truck(programe,t, new BoundingBox(t, 90d, 32d), new Velocity(v), true, 3000l+r.nextInt(10000));
+			tmp = new Truck(programe,t, new BoundingBox(t, 90d, 32d), new Velocity(v), true, 30000l+r.nextInt(100000));
 			full++;
 			return tmp;
 		}
-		else if(empty < 4)
-		{
+		//else if(empty < 4)
+		/*{
 			tmp = new Truck(programe,t, new BoundingBox(t, 90d, 32d), new Velocity(v), false, 3000l+r.nextInt(10000));
 			empty++;
 			return tmp;
-		}
+		}*/
 		return null;
 	}
 }

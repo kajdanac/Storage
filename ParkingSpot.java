@@ -6,7 +6,6 @@ public class ParkingSpot {
 	public Forklift f;
 	public Truck t;
 	public boolean empty = true;
-	private Parking par;
 	
 	public ParkingSpot(Position p, BoundingBox b, Forklift f, Parking par) 
 	{
@@ -15,26 +14,23 @@ public class ParkingSpot {
 		this.setB(b);
 		this.f = f;
 		f.par = this;
-		this.par = par;
 	}
 	
 	
 	public Position callForklift()
 	{
 		f.v.x = 10d;
-		par.signalDrive();
 		return this.p;
 	}
 	
 	public boolean endDrop()
 	{
 		Velocity tvel;
-		par.waitDrive();
 		t.setDepart(true);
-		t.setState(3);
-		empty = true;
+		t.setState(5);
 		tvel = new Velocity(20d, 0d);
 		t.setV(tvel);
+		t = null;
 		return true;
 	}
 

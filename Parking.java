@@ -5,7 +5,6 @@ public class Parking
 {
 	LinkedList<ParkingSpot> pl;
 	Semaphore drive;
-	LinkedList<Thread> t;
 
 	public Parking(Program p) {
 		super();
@@ -19,7 +18,6 @@ public class Parking
 		ParkingSpot p4=new ParkingSpot(new Position(196d, 467d), new BoundingBox(new Position(199d,461d),91d,41d), p.fl.getLast(), this);
 		pl.add(p4);
 		drive = new Semaphore(1);
-		t = new LinkedList<Thread>();
 	}
 	
 	public synchronized ParkingSpot getFreeSpot()
@@ -29,28 +27,9 @@ public class Parking
 			if(tmp.empty)
 			{
 				tmp.empty = false;
-				waitDrive();
 				return tmp;
 			}
 		}
 		return null;
-	}
-	public synchronized void waitDrive()
-	{
-		while(!drive.tryAcquire())
-		{
-			try
-			{
-				this.wait();
-			} catch (InterruptedException e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
-	public synchronized void signalDrive()
-	{
-		drive.release();
-		this.notifyAll();
 	}
 }

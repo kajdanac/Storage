@@ -39,13 +39,13 @@ public class TruckThread implements Runnable
 	@Override
 	public void run()
 	{
-		while(true)
+		while(t.getLive())
 		{
 			Date d1 = new Date();
 			t.update(dt);
 			try
 			{
-				Thread.sleep(100);
+				Thread.sleep(33);
 			} catch (InterruptedException e)
 			{
 				e.printStackTrace();

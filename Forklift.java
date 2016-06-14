@@ -34,17 +34,18 @@ public class Forklift extends Entity
 		if(b.intersects(par.getB()))
 		{
 			v.set(0d, 0d);
-			p.x = par.getB().p.x-b.width;
-			ti.schedule(new TimerTask()
-			{
-				
-				@Override
-				public void run()
+			p.x = par.getB().p.x-(b.width+1);
+			if(par.t != null)
+				ti.schedule(new TimerTask()
 				{
-					Forklift.this.par.endDrop();
-					v.x = -10d;
-				}
-			}, t);
+					
+					@Override
+					public void run()
+					{
+						Forklift.this.par.endDrop();
+						v.x = -10d;
+					}
+				}, par.t.getT());
 		}
 		if(p.x <= back.x)
 		{

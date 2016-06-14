@@ -4,14 +4,18 @@ public class Truck extends Entity
 {
 	private Boolean full;
 	private Long t;
-	private Position p;
+	private Boolean live;
+	Position p;
 	private BoundingBox b;
 	private Velocity v;
-	private Long angle;
+	Long angle;
 	private Long angVel;
+	private Boolean colliding;
 	private Program programe;
+	private BoundingBox front;
 	private ParkingSpot pa;
 	private Boolean depart;
+	private volatile Boolean drive;
 	private volatile Integer state;
 	public Truck(Program prog,Position pos, BoundingBox box, Velocity vel, Boolean full, Long time)
 	{
@@ -25,25 +29,45 @@ public class Truck extends Entity
 		angVel = new Long(0);
 		depart = false;
 		state = 0;
+		drive = true;
+		live = true;
+		colliding = false;
+		front = new BoundingBox(p, -3d, 32d);
+		pa = null;
 	}
 	
 	@Override
-	public synchronized void update(Double dt)
+	public void update(Double dt)
 	{
-		p.x += v.x*dt;
-		p.y += v.y*dt;
+		if(!colliding)
+			if(drive)
+			{
+				p.x += v.x*dt;
+				p.y += v.y*dt;
+			}
+			else
+			{
+				drive = programe.pl.drive.tryAcquire();
+			}
 		for(Truck tmp : programe.tl)
 		{
-			if(v.x == 0 || depart)
+			if(tmp == null)
 				break;
 			if(this!=tmp)
 			{
 				if(tmp.getDepart())
-					break;
-				if(this.b.intersects(tmp.getB()))
+					continue;
+				if(this.front.intersects(tmp.getB()))
 				{
-					v.set(0d,  0d);
-					p.x = tmp.getP().x+90;
+					if(!colliding)
+						p.x = tmp.getP().x+90;
+					colliding = true;
+					break;
+					
+				}
+				else
+				{
+					colliding = false;
 				}
 				
 			}
@@ -52,29 +76,55 @@ public class Truck extends Entity
 		switch(state)
 		{
 		case 0:
-			if(p.x < 390)
+			if(p.x < 690)
 			{
-				p.x = 390d;
+				programe.start = true;
+				state = 1;
+			}
+			break;
+		case 1:
+			if(p.x < 480)
+			{
 				if(pa == null)
 					pa = programe.pl.getFreeSpot();
+				if(pa == null)
+				{
+					colliding = true;
+				}
+				else
+				{
+					colliding = false;
+				}
+				drive = false;
+				if(pa != null)
+					state = 2;
+			}
+			break;
+		case 2:
+			if(p.x < 390)
+			{
 				if(pa != null)
 				{
 					pa.t = this;
-					state = 1;
+					state = 3;
 					if(pa.getB().p.y > p.y)
 					{
 						v.set(0d, 20d);
 						angle = (long)90;
+						b.width = 32d;
+						b.heigth = 90d;
 					}
 					else
 					{
 						v.set(0d, -20d);
 						angle = (long)270;
+						b.width = 32d;
+						b.heigth = 90d;
 					}
 				}
 			}
 			break;
-		case 1:
+		case 3:
 			if(v.y > 0)
 			{
 				if(pa.getB().p.y <= p.y)
@@ -82,7 +132,7 @@ public class Truck extends Entity
 					p.y = pa.getB().p.y;
 					v.set(-10d, 0d);
 					angle = (long)0;
-					state = 2;
+					state = 4;
 				}
 			}
 			else
@@ -92,37 +142,49 @@ public class Truck extends Entity
 					p.y = pa.getB().p.y;
 					v.set(-10d, 0d);
 					angle = (long)0;
-					state = 2;
+					b.heigth = 32d;
+					b.width = 90d;
+					state = 4;
 				}
 			}
 			break;
-		case 2:
+		case 4:
 			if(pa.getB().p.x >= p.x)
 			{
 				p.x = pa.getB().p.x;
 				pa.callForklift();
+				programe.pl.drive.release();
 				v.set(0d, 0d);
-				state = 6;
+				state = 11;
 			}
 			break;
-		case 3:
+		case 5:
+			drive = false;
+			state = 6;
+			break;
+		case 6:
 			if(p.x > 295)
 			{
 				p.x = 295d;
-				state = new Integer(4);
+				state = 7;
+				pa.empty = true;
 				if(296 > p.y)
 				{
 					v.set(0d, 20d);
 					angle = (long)90;
+					b.width = 32d;
+					b.heigth = 90d;
 				}
 				else
 				{
 					v.set(0d, -20d);
 					angle = (long)270;
+					b.width = 32d;
+					b.heigth = 90d;
 				}
 			}
 			break;
-		case 4:
+		case 7:
 			if(v.y > 0)
 			{
 				if(296 <= p.y)
@@ -130,7 +192,9 @@ public class Truck extends Entity
 					p.y = 296;
 					v.set(20d, 0d);
 					angle = (long)0;
-					state = 5;
+					b.heigth = 32d;
+					b.width = 90d;
+					state = 8;
 				}
 			}
 			else
@@ -140,83 +204,100 @@ public class Truck extends Entity
 					p.y = 296;
 					v.set(20d, 0d);
 					angle = (long)0;
-					state = 5;
+					b.heigth = 32d;
+					b.width = 90d;
+					state = 8;
 				}
 			}
 			break;
-		case 5:
-			programe.pl.signalDrive();
-			state = 6;
+		case 8:
+			if(p.x > 480)
+			{
+				state = 9;
+			}
 			break;
+		case 9:
+			programe.pl.drive.release();
+			state = 10;
+			break;
+		case 10:
+			if(p.x >= 800)
+			{
+				live = false;
+				programe.s.acquireUninterruptibly();
+				programe.tl.remove(this);
+				programe.s.release();
+				programe.tf.returnFull();
+			}
 		default:
 			break;
 		}
 		
 	}
-	public synchronized Boolean getFull()
+	public Boolean getFull()
 	{
 		return full;
 	}
-	public synchronized void setFull(Boolean full)
+	public  void setFull(Boolean full)
 	{
 		this.full = full;
 	}
-	public synchronized Long getT()
+	public  Long getT()
 	{
 		return t;
 	}
-	public synchronized void setT(Long t)
+	public  void setT(Long t)
 	{
 		this.t = t;
 	}
-	public synchronized BoundingBox getB()
+	public  BoundingBox getB()
 	{
 		return b;
 	}
-	public synchronized void setB(BoundingBox b)
+	public  void setB(BoundingBox b)
 	{
 		this.b = b;
 	}
-	public synchronized Position getP()
+	public  Position getP()
 	{
 		return p;
 	}
-	public synchronized void setP(Position p)
+	public  void setP(Position p)
 	{
 		this.p = p;
 	}
-	public synchronized Velocity getV()
+	public  Velocity getV()
 	{
 		return v;
 	}
-	public synchronized void setV(Velocity v)
+	public  void setV(Velocity v)
 	{
 		this.v = v;
 	}
-	public synchronized Long getAngle() {
+	public  Long getAngle() {
 		return angle;
 	}
-	public synchronized void setAngle(Long angle) {
+	public  void setAngle(Long angle) {
 		this.angle = angle;
 	}
-	public synchronized Long getAngVel() {
+	public  Long getAngVel() {
 		return angVel;
 	}
-	public synchronized void setAngVel(Long angVel) {
+	public  void setAngVel(Long angVel) {
 		this.angVel = angVel;
 	}
 
-	public synchronized Boolean getDepart()
+	public  Boolean getDepart()
 	{
 		return depart;
 	}
 
-	public synchronized void setDepart(Boolean depart)
+	public  void setDepart(Boolean depart)
 	{
 		this.depart = depart;
 	}
 
-	public synchronized Integer getState()
+	public  Integer getState()
 	{
 		return state;
 	}
@@ -224,5 +305,25 @@ public class Truck extends Entity
 	public synchronized void setState(Integer state)
 	{
 		this.state = state;
+	}
+
+	public synchronized Boolean getDrive()
+	{
+		return drive;
+	}
+
+	public synchronized void setDrive(Boolean drive)
+	{
+		this.drive = drive;
+	}
+
+	public  Boolean getLive()
+	{
+		return live;
+	}
+
+	public  void setLive(Boolean live)
+	{
+		this.live = live;
 	}
 }

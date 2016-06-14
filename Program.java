@@ -16,6 +16,7 @@ public class Program
 	TruckFactory tf;
 	Semaphore s;
 	Parking pl;
+	volatile Boolean start;
 	private void init()
 	{
 		w = null;
@@ -25,6 +26,7 @@ public class Program
 		tf = new TruckFactory(this,new Position(800d, 244d), new Velocity(-20d, 0d));
 		s = new Semaphore(1);
 		t = new Timer();
+		start = true;
 		Position k;
 		ForkliftThread tt;
 		Thread nt;
@@ -74,7 +76,7 @@ public class Program
 	{
 		while(true)
 		{	
-			if(u)
+			if(u && start)
 			{
 				update();
 				Truck tmp = null;
@@ -88,6 +90,7 @@ public class Program
 					Thread tn = new Thread(tt);
 					tn.setDaemon(true);
 					tn.start();
+					start = false;
 				}
 			}
 			render();
